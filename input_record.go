@@ -9,18 +9,18 @@ import (
 )
 
 // This implements the Job interface
-type ReadRequest struct {
+type InputRecord struct {
 	Shabd   string
 	Nirdesh string
 	Lingam  string
 	URL     string
 }
 
-func (r ReadRequest) String() string {
+func (r InputRecord) String() string {
 	return fmt.Sprintf("%s:%s", r.Shabd, r.URL)
 }
 
-func (r ReadRequest) Process() error {
+func (r InputRecord) Process() error {
 	// scrape
 	nouns, err := utils.Scrape(r.Shabd, r.Nirdesh, r.Lingam, r.URL)
 	if err != nil {

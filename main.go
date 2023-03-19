@@ -14,9 +14,6 @@ import (
 )
 
 func main() {
-	// forms, err := utils.Scrape("exampl", "nire", "pumlingam", "https://sanskritabhyas.in/%E0%A4%A8%E0%A5%80-Shabd-Roop")
-	// fmt.Println(forms.Forms)
-	// return
 	inputFileName := "sample.2.csv"
 	outputFileName := "output.csv"
 	failedFileName := "failed.csv"
@@ -28,8 +25,8 @@ func main() {
 	file, err := os.Open(inputFileName)
 	var rowCount int
 
-	constants.DoneProgram = make(chan bool)
-	constants.RecordCount = make(chan int)
+	constants.DoneRecWrite = make(chan bool)
+	constants.InputRecordCount = make(chan int)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -51,7 +48,7 @@ func main() {
 			if err != nil {
 				if err == io.EOF {
 					// we have reached the end of file
-					constants.RecordCount <- rowCount
+					constants.InputRecordCount <- rowCount
 					break
 				}
 				log.Fatalln(err)
@@ -59,12 +56,10 @@ func main() {
 			rowCount++
 
 			//	format ईकारान्त पुंलिङ्गम्,नी,https://sanskritabhyas.in/%E0%A4%A8%E0%A5%80-Shabd-Roop
-
 			words := strings.Split(record[0], " ")
-
 			scrapeUrl := record[2]
 
-			reader := &ReadRequest{
+			reader := &InputRecord{
 				Shabd:   record[1],
 				Nirdesh: words[0],
 				Lingam:  words[1],
@@ -75,9 +70,9 @@ func main() {
 		}
 	}()
 
-	<-constants.DoneProgram
+	<-constants.DoneRecWrite
 	dispatcher.Close()
 	csvwriter.Writer.Close()
 	timeSince := time.Since(startTime)
-	log.Println("Execution time:", timeSince)
+	log.Printf("Total of %v records written in %v seconds", rowCount, timeSince)
 }

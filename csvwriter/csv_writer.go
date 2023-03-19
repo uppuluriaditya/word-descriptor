@@ -37,14 +37,12 @@ func NewCSVWriter(fileName, failedFileName, specialFileName string) *CSVWriter {
 
 func (c *CSVWriter) Start() {
 	// create a new CSV file
-	// file, err := os.Create(c.fileName)
 	file, err := os.OpenFile(c.fileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	failedFile, err := os.OpenFile(c.failedFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	specialFile, err := os.OpenFile(c.specialFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
 	}
-	// defer file.Close()
 
 	// create a CSV writer
 	writer := csv.NewWriter(file)
@@ -81,7 +79,7 @@ func (c *CSVWriter) Start() {
 					writer.Flush()
 				}
 				if c.numOfWriteReqs == c.totalRecords {
-					constants.DoneProgram <- true
+					constants.DoneRecWrite <- true
 				}
 
 			case row := <-c.failedRec:
@@ -96,7 +94,7 @@ func (c *CSVWriter) Start() {
 				failedWriter.Flush()
 
 				if c.numOfWriteReqs == c.totalRecords {
-					constants.DoneProgram <- true
+					constants.DoneRecWrite <- true
 				}
 
 			case row := <-c.specialRec:
@@ -109,12 +107,14 @@ func (c *CSVWriter) Start() {
 				// flush any remaining buffered data
 				specialWriter.Flush()
 
-			case num := <-constants.RecordCount:
+			case num := <-constants.InputRecordCount:
 				c.totalRecords = num
 			case <-c.doneChan:
 				// flush any remaining buffered data
 				writer.Flush()
 				file.Close()
+				failedFile.Close()
+				specialFile.Close()
 				return
 			}
 		}
