@@ -1,3 +1,5 @@
 *.txt
 word-descriptor
 *.csv
+.vscode
+.DS_store
